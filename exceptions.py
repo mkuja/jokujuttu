@@ -3,6 +3,12 @@ class WrongPassword(Exception):
     """Raised when trying to INSERT a user into the DB with email that already exists."""
     pass
 
+class EmailAlreadyRegistered(Exception):
+    """Raised when the database has an entry of this email already being registered. Try another email address."""
+
+    def __init__(self, message):
+        self.message = message
+
 
 class UserNotFound(Exception):
     """Raised when trying to look up a user, but one is not found."""
@@ -19,5 +25,5 @@ class NotImplementedError(Error):
 class LoadingError(Error):
     """Happens when something is pooped when trying to load things."""
 
-    def __init__(self, *args, **kwargs):
-        super(self, *args, **kwargs)
+    def __init__(self, message):
+        self.message = message

@@ -2,8 +2,6 @@ import psycopg2
 import os
 import dotenv
 
-from typing import Tuple
-
 dotenv.load_dotenv()
 
 connection = psycopg2.connect(os.environ['DATABASE_URI'])
@@ -17,13 +15,13 @@ CREATE_DECKS_TABLE = """CREATE TABLE IF NOT EXISTS decks (
     id      serial PRIMARY KEY,
     suit    char(1),    -- (D)iamonds, (H)earts, (C)rosses, S(pades)
     value   smallint,   -- 1 for ace, 13 for king.
-    deck    int,
+    deck    int NOT NULL,
     time_drawn float    -- UNIX timestamp when the card has been drawn from deck.
 )"""
 CREATE_HANDS_TABLE = """CREATE TABLE IF NOT EXISTS hands (
     id      serial PRIMARY KEY,
     time_modified float NOT NULL,
-    user_id int,  -- NULL value means computer player.
+    user_id int,  -- Value of 1 means computer player.
     suit1   char(1),
     value1  smallint,
     suit2   char(1),
@@ -44,38 +42,11 @@ CREATE_GAME_TABLE_TABLE = """CREATE TABLE IF NOT EXISTS game_table (
     turn_indicator  smallint NOT NULL,  -- Negative means computer's turn. Positive means player's turn.
                                         -- Zero means initial drawing is in progress.
     deck_id         int NOT NULL,
-    user_id         int,
+    user_id         int NOT NULL,
     FOREIGN KEY (computer_hand_id) REFERENCES hands(id),
     FOREIGN KEY (player_hand_id) REFERENCES hands(id),
     FOREIGN KEY (deck_id) REFERENCES decks(id),
     FOREIGN KEY (user_id) REFERENCES users(id))"""
-# CREATE_TABLES_TABLE = """CREATE TABLE IF NOT EXISTS tables (
-#     id      serial PRIMARY KEY,
-#     user_id int,    -- Owner of the table
-#     decks_id int,   -- Deck of the table
-#     FOREIGN KEY (user_id) REFERENCES users(id),
-#     FOREIGN KEY (deck_id) REFERENCES
-# )"""
-
-LOAD_A_GAME = """SELECT (game_table.id, game_table.turn_indicator,
-                        users.email,
-                        decks.deck,
-                        -- Player hand and computer hand
-                        hands.suit1, hands.value1, hands.suit2, hands.value2, 
-                        hands.suit3, hands.value3, hands.suit4, hands.value4, 
-                        hands.suit5, hands.value5, hands.time_modified
-                        ) FROM game_table JOIN users JOIN decks JOIN hands ON 
-                                gametable.user_id = users.id 
-                                AND (gametable.player_hand_id = hands.id
-                                    OR gametable.computer_hand_id = hands.id)"""
-
-
-with connection:
-    with connection.cursor() as cursor:
-        cursor.execute(CREATE_USERS_TABLE)
-        cursor.execute(CREATE_DECKS_TABLE)
-        cursor.execute(CREATE_HANDS_TABLE)
-        cursor.execute(CREATE_GAME_TABLE_TABLE)
 
 
 def prepare_new_deck():
@@ -97,7 +68,9 @@ UPDATE_USER = r"""UPDATE users SET email = %s, password = %s WHERE id = %s;"""
 GET_DECK_HIGHEST_DECK_IDENTIFIER = r"""SELECT deck FROM decks ORDER BY deck DESC LIMIT 1;"""
 INSERT_CARDS_IN_DECKS = r"""INSERT INTO decks (suit, value, deck)
                             VALUES (%s, %s, %s) RETURNING deck;"""
+GET_DECK_BY_DECK = """SELECT suit, value, time_drawn FROM decks WHERE deck = %s"""
 GET_USER_BY_EMAIL = r"""SELECT * FROM users WHERE email = %s;"""
+GET_USER_BY_ID = r"""SELECT * FROM users WHERE id = %s;"""
 DRAW_A_CARD = """SELECT id, suit, value, deck
                 FROM decks
                 WHERE deck = %s AND time_drawn IS NULL
@@ -124,7 +97,53 @@ UPDATE_HAND_TO_HANDS = """UPDATE hands SET suit1 = %s, value1 = %s,
                                             time_modified = %s
                             WHERE id = %s"""
 GET_HAND_BY_ID = """SELECT suit1, value1, suit2, value2, suit3, value3, suit4, value4, suit5, value5,
-                            time_modified FROM hands
+                            user_id, time_modified FROM hands
                             WHERE id = %s;"""
+INSERT_NEW_GAME_TABLE = """INSERT INTO game_table (timestamp_created, computer_hand_id, player_hand_id,
+                                                    turn_indicator, deck_id, user_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            RETURNING id;"""
+LOAD_A_GAME_BY_ID = """SELECT (game_table.id, game_table.turn_indicator,
+                        users.email,
+                        decks.deck,
+                        -- Player hand and computer hand
+                        hands.suit1, hands.value1, hands.suit2, hands.value2, 
+                        hands.suit3, hands.value3, hands.suit4, hands.value4, 
+                        hands.suit5, hands.value5, hands.time_modified
+                        ) FROM game_table JOIN users JOIN decks JOIN hands ON 
+                                gametable.user_id = users.id 
+                                AND (gametable.player_hand_id = hands.id
+                                    OR gametable.computer_hand_id = hands.id)
+                        WHERE game_table.id = %s
+                        ORDER BY hands.user_id ASC NULLS LAST"""
+GET_NEWEST_GAME_BY_USER_EMAIL = """SELECT (game_table.id, game_table.turn_indicator,
+                        users.email,
+                        decks.deck,
+                        -- Player hand and computer hand
+                        hands.suit1, hands.value1, hands.suit2, hands.value2, 
+                        hands.suit3, hands.value3, hands.suit4, hands.value4, 
+                        hands.suit5, hands.value5, hands.time_modified
+                        ) FROM game_table JOIN users JOIN decks JOIN hands ON 
+                                gametable.user_id = users.id 
+                                AND (gametable.player_hand_id = hands.id
+                                    OR gametable.computer_hand_id = hands.id)
+                        WHERE users.email = %s
+                        ORDER BY game_table.id ASC NULLS LAST"""
 
+
+import string
+from random import sample
+import exceptions
+with connection:
+    with connection.cursor() as cursor:
+        cursor.execute(CREATE_USERS_TABLE)
+        cursor.execute(CREATE_DECKS_TABLE)
+        cursor.execute(CREATE_HANDS_TABLE)
+        cursor.execute(CREATE_GAME_TABLE_TABLE)
+        try:
+            chars = string.ascii_letters + string.digits + string.punctuation
+            length = 30
+            cursor.execute(CREATE_NEW_USER, ("robot@hornantuutti.fi", sample(chars, length)))
+        except psycopg2.errors.UniqueViolation as e:
+            pass
 
