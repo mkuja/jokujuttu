@@ -91,9 +91,9 @@ INSERT_INTO_HANDS = """INSERT INTO hands (suit1, value1, suit2, value2, suit3, v
                         RETURNING id"""
 UPDATE_HAND_TO_HANDS = """UPDATE hands SET suit1 = %s, value1 = %s,
                                             suit2 = %s, value2 = %s,
-                                            suit2 = %s, value2 = %s,
-                                            suit2 = %s, value2 = %s,
-                                            suit2 = %s, value2 = %s,
+                                            suit3 = %s, value3 = %s,
+                                            suit4 = %s, value4 = %s,
+                                            suit5 = %s, value5 = %s,
                                             time_modified = %s
                             WHERE id = %s"""
 GET_HAND_BY_ID = """SELECT suit1, value1, suit2, value2, suit3, value3, suit4, value4, suit5, value5,
@@ -103,47 +103,47 @@ INSERT_NEW_GAME_TABLE = """INSERT INTO game_table (timestamp_created, computer_h
                                                     turn_indicator, deck_id, user_id)
                             VALUES (%s, %s, %s, %s, %s, %s)
                             RETURNING id;"""
-LOAD_A_GAME_BY_ID = """SELECT (game_table.id, game_table.turn_indicator,
-                        users.email,
-                        decks.deck,
-                        -- Player hand and computer hand
-                        hands.suit1, hands.value1, hands.suit2, hands.value2, 
-                        hands.suit3, hands.value3, hands.suit4, hands.value4, 
-                        hands.suit5, hands.value5, hands.time_modified
-                        ) FROM game_table JOIN users JOIN decks JOIN hands ON 
-                                gametable.user_id = users.id 
-                                AND (gametable.player_hand_id = hands.id
-                                    OR gametable.computer_hand_id = hands.id)
-                        WHERE game_table.id = %s
-                        ORDER BY hands.user_id ASC NULLS LAST"""
-GET_NEWEST_GAME_BY_USER_EMAIL = """SELECT (game_table.id, game_table.turn_indicator,
-                        users.email,
-                        decks.deck,
-                        -- Player hand and computer hand
-                        hands.suit1, hands.value1, hands.suit2, hands.value2, 
-                        hands.suit3, hands.value3, hands.suit4, hands.value4, 
-                        hands.suit5, hands.value5, hands.time_modified
-                        ) FROM game_table JOIN users JOIN decks JOIN hands ON 
-                                gametable.user_id = users.id 
-                                AND (gametable.player_hand_id = hands.id
-                                    OR gametable.computer_hand_id = hands.id)
-                        WHERE users.email = %s
-                        ORDER BY game_table.id ASC NULLS LAST"""
+UPDATE_GAME_ON_GAME_TABLE = """UPDATE game_table SET timestamp_created = %s, computer_hand_id = %s,
+                                                    player_hand_id = %s, turn_indicator = %s,
+                                                    deck_id = %s, user_id = %s
+                                WHERE id=%s"""
+# LOAD_A_GAME_BY_ID = """SELECT (game_table.id, game_table.turn_indicator,
+#                         users.email,
+#                         decks.deck,
+#                         -- Player hand and computer hand
+#                         hands.suit1, hands.value1, hands.suit2, hands.value2,
+#                         hands.suit3, hands.value3, hands.suit4, hands.value4,
+#                         hands.suit5, hands.value5, hands.time_modified
+#                         ) FROM game_table JOIN users JOIN decks JOIN hands ON
+#                                 gametable.user_id = users.id
+#                                 AND (gametable.player_hand_id = hands.id
+#                                     OR gametable.computer_hand_id = hands.id)
+#                         WHERE game_table.id = %s
+#                         ORDER BY hands.user_id ASC NULLS LAST"""
+GET_LATEST_GAME_TABLE_BY_EMAIL = \
+    """SELECT game_table.id, game_table.timestamp_created, game_table.computer_hand_id,
+           game_table.player_hand_id, game_table.deck_id, game_table.user_id, turn_indicator
+    FROM game_table LEFT JOIN users
+    ON game_table.user_id = users.id
+    WHERE users.email=%s
+    ORDER BY timestamp_created DESC
+    LIMIT 1"""
 
 
-import string
-from random import sample
-import exceptions
-with connection:
-    with connection.cursor() as cursor:
-        cursor.execute(CREATE_USERS_TABLE)
-        cursor.execute(CREATE_DECKS_TABLE)
-        cursor.execute(CREATE_HANDS_TABLE)
-        cursor.execute(CREATE_GAME_TABLE_TABLE)
-        try:
-            chars = string.ascii_letters + string.digits + string.punctuation
-            length = 30
-            cursor.execute(CREATE_NEW_USER, ("robot@hornantuutti.fi", sample(chars, length)))
-        except psycopg2.errors.UniqueViolation as e:
-            pass
+def create_tables():
+    import string
+    from random import sample
+    import exceptions
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(CREATE_USERS_TABLE)
+            cursor.execute(CREATE_DECKS_TABLE)
+            cursor.execute(CREATE_HANDS_TABLE)
+            cursor.execute(CREATE_GAME_TABLE_TABLE)
+            try:
+                chars = string.ascii_letters + string.digits + string.punctuation
+                length = 30
+                cursor.execute(CREATE_NEW_USER, ("robot@hornantuutti.fi", sample(chars, length)))
+            except psycopg2.errors.UniqueViolation as e:
+                pass
 

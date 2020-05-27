@@ -6,6 +6,7 @@ from models.card import Card
 from models.deck import Deck
 from models.hand import Hand
 from models.user import User
+import constants
 
 from exceptions import NotImplementedError
 
@@ -40,9 +41,9 @@ class GameTable:
             with connection.cursor() as cursor:
                 # 1 here and at the return statement is turn_indicator. 1 Means player's turn.
                 cursor.execute(database.INSERT_NEW_GAME_TABLE, (timestamp, computer_hand.id, player_hand.id,
-                                                                1, deck.id, user.id))
+                                                                constants.PLAYER_TURN_INDICATOR, deck.id, user.id))
                 id_ = cursor.fetchone()[0]
-        return GameTable(deck, user, player_hand, computer_hand, id_, 1)
+        return GameTable(deck, user, player_hand, computer_hand, id_, constants.PLAYER_TURN_INDICATOR)
 
     @classmethod
     def load_latest_game(cls, email):
@@ -50,31 +51,35 @@ class GameTable:
         with connection:
             with connection.cursor() as cursor:
                 user = User.get_user_by_email(email)
-                cursor.execute(database.GET_NEWEST_GAME_BY_USER_EMAIL, (email,))
-                for party in ("player", "computer"):
-                    (id_, turn_indicator, email, deck_number, suit1, value1, suit2, value2, suit3, value3,
-                     suit4, value4, suit5, value5, time_modified) = cursor.fetchone()
-                    hand = Hand(user, Card(suit1, value1), Card(suit2, value2), Card(suit3, value3), Card(suit4, value4)
-                                , Card(suit5, value5))
-                    if party == "player":
-                        player_hand = hand
-                    else:
-                        computer_hand = hand
+                cursor.execute(database.GET_LATEST_GAME_TABLE_BY_EMAIL, (email,))
+                (game_table_id, timestamp_created, computer_hand_id,
+                 player_hand_id, deck_id, user_id, turn_indicator) = cursor.fetchone()
+                # Get Hands
+                cursor.execute(database.GET_HAND_BY_ID, (user_id, ))
+                player_hand = cursor.fetchone()[0]
+                cursor.execute(database.GET_HAND_BY_ID, (computer_hand_id, ))
+                computer_hand = cursor.fetchone()[0]
+                deck = Deck(deck_id)
+                return cls(deck, user, player_hand, computer_hand, game_table_id, turn_indicator)
 
-                deck = Deck(deck_number)
-                return cls(deck, user, player_hand, computer_hand, id_, turn_indicator)
+    def save(self):  # TODO: Check that the thing actually exists in the database.
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(database.UPDATE_GAME_ON_GAME_TABLE, (self.computer.id, self.player.id,
+                                                                    self.turn_indicator,
+                                                                    self.deck.id, self.user.id,
+                                                                    self.id))
 
     def get_id(self):
         return self.id
 
-    def game_situation(self):
-        """Return player and computer hands, whose turn it is."""
-        pass
-
-    def draw_a_card(self):
-        """Draw a card, either for player or computer, if there is a card to be drawn."""
+    def draw_a_card(self) -> Card:
+        """Draw a card, either for player or computer, depending on self.turn_indicator."""
         return self.deck.draw()
-    def stay(self):
-        """Stays either player or computer, depending on whose turn it is."""
-        pass
 
+    def stay(self):
+        """Stays either player or computer, depending on whose turn it is.
+
+        Only player needs to invoke this."""
+        self.turn_indicator = constants.COMPUTER_TURN_INDICATOR
+        self.save()

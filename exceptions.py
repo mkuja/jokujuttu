@@ -27,3 +27,9 @@ class LoadingError(Error):
 
     def __init__(self, message):
         self.message = message
+
+class Fly(Error):
+
+    def __init__(self, message="Things art fubar."):
+        self.message = message
+

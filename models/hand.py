@@ -19,17 +19,20 @@ class Hand:
             self.cards += list(cards)
         self.save()
 
+    def __len__(self):
+        return len(self.cards)
+
     def __repr__(self):
         return f"Hand({self.user!r}, {tuple(self.cards)!r})"
 
     def add_card(self, card: Card):
         self.cards.append(card)
+        self.save()
 
     def get_cards(self) -> Tuple[Card]:
         return tuple(self.cards)
 
     def save(self):
-        # hand = tuple([element for tpl in self.cards for element in tpl])
         hand = tuple([element for tpl in self.cards for element in (tpl.suit, tpl.value)])
         hand += (None,) * (10 - len(hand))
         hand += (datetime.datetime.timestamp(datetime.datetime.now()),)

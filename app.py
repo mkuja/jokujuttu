@@ -1,3 +1,3 @@
-from models.user import User
-import string
-from random import sample
+import database
+
+database.create_tables()

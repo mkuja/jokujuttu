@@ -6,7 +6,7 @@ from exceptions import *
 
 
 class User:
-    def __init__(self, email, password=None, _id=None):
+    def __init__(self, email, password, _id=None):
         self.email = email
         self.password = password
         self.id = _id
@@ -24,7 +24,7 @@ class User:
                     try:
                         cursor.execute(database.CREATE_NEW_USER, (self.email, self.password))
                         self.id = cursor.fetchone()[0]
-                    except psycopg2.errors.UniqueViolation:
+                    except psycopg2.errors.UniqueViolation:  # TODO: UPDATE instead. Or is it better?
                         raise EmailAlreadyRegistered("Try another email address.")
 
     @classmethod
