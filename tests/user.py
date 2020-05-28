@@ -9,7 +9,7 @@ from models.deck import Deck
 # from models.player import Player
 from models.hand import Hand
 import exceptions
-from game import game_table
+from game import game
 
 
 class TestUser(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestUser(unittest.TestCase):
         except exceptions.UserNotFound:
             user = User(username, password)
             user.save()
-        game = game_table.GameTable.new_game(user)
+        game = game.GameTable.new_game(user)
         game.draw_a_card()
         game.draw_a_card()
         game.stay()

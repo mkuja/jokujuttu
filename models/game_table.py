@@ -4,7 +4,8 @@ import database
 
 from models.card import Card
 from models.deck import Deck
-from models.hand import Hand
+#from models.hand import Hand
+from game.hand import Hand
 from models.user import User
 import constants
 
