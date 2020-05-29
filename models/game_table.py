@@ -1,4 +1,4 @@
-
+from constants import COMPUTER_UID
 from database import connection
 import database
 
@@ -48,18 +48,37 @@ class GameTable:
 
     @classmethod
     def load_latest_game(cls, email):
-        """Return latest game by a user."""
+        """Return latest game by a user or a new game if one didn't exist."""
         with connection:
             with connection.cursor() as cursor:
                 user = User.get_user_by_email(email)
                 cursor.execute(database.GET_LATEST_GAME_TABLE_BY_EMAIL, (email,))
-                (game_table_id, timestamp_created, computer_hand_id,
-                 player_hand_id, deck_id, user_id, turn_indicator) = cursor.fetchone()
+                bulk = cursor.fetchone()
+                print (bulk)
+                if bulk:
+                    (game_table_id, timestamp_created, computer_hand_id,
+                     player_hand_id, deck_id, user_id, turn_indicator) = bulk
+                else:
+                    return cls.new_game(user)
                 # Get Hands
-                cursor.execute(database.GET_HAND_BY_ID, (user_id, ))
-                player_hand = cursor.fetchone()[0]
+                cursor.execute(database.GET_HAND_BY_ID, (player_hand_id, ))
+                p_s1, p_v1, p_s2, p_v2, p_s3, p_v3, p_s4, p_v4, p_s5, p_v5,\
+                    uid, mtime = cursor.fetchone()
+                player = User.get_user_by_id(uid)
+                player_hand = Hand(player, Card(p_s1, p_v1),
+                                   Card(p_s2, p_v2),
+                                   Card(p_s3, p_v3),
+                                   Card(p_s4, p_v4),
+                                   Card(p_s5, p_v5))
                 cursor.execute(database.GET_HAND_BY_ID, (computer_hand_id, ))
-                computer_hand = cursor.fetchone()[0]
+                c_s1, c_v1, c_s2, c_v2, c_s3, c_v3, c_s4, c_v4, c_s5, c_v5,\
+                    cuid, cmtime = cursor.fetchone()
+                computer = User.get_user_by_id(COMPUTER_UID)
+                computer_hand = Hand(computer, Card(c_s1, c_v1),
+                                     Card(c_s2, c_v2),
+                                     Card(c_s3, c_v3),
+                                     Card(c_s4, c_v4),
+                                     Card(c_s5, c_v5))
                 deck = Deck(deck_id)
                 return cls(deck, user, player_hand, computer_hand, game_table_id, turn_indicator)
 

@@ -103,7 +103,7 @@ INSERT_NEW_GAME_TABLE = """INSERT INTO game_table (timestamp_created, computer_h
                                                     turn_indicator, deck_id, user_id)
                             VALUES (%s, %s, %s, %s, %s, %s)
                             RETURNING id;"""
-UPDATE_GAME_ON_GAME_TABLE = """UPDATE game_table SET timestamp_created = %s, computer_hand_id = %s,
+UPDATE_GAME_ON_GAME_TABLE = """UPDATE game_table SET computer_hand_id = %s,
                                                     player_hand_id = %s, turn_indicator = %s,
                                                     deck_id = %s, user_id = %s
                                 WHERE id=%s"""
