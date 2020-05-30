@@ -1,3 +1,5 @@
 dotenv-python
 flask
 flask-RESTful
+
+flask-jwt-extended

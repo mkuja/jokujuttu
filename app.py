@@ -1,5 +1,13 @@
+# TODO: recognize when player goes over 21 and don't allow drawing more cards, and conclude the game as player's loss.
+# TODO: Don't allow drawing more than five cards.
+# TODO: Five cards and a hand value < 22 is a blackjack. recognize this without having to stay.
+# TODO: Don't allow user to draw cards for the computer using draw() after staying.
+# TODO: Don't draw() for computer if player has a blackjack.
+
+# TODO: Prevent logging in with empty email.
+# TODO: evaluate_winner should be run only when game is truly over.
+
 import database
-database.create_tables()
 
 import argparse
 
@@ -7,6 +15,11 @@ from game.game import Game
 from models.user import User
 from game.hand import Hand
 from exceptions import *
+
+from api.api import app
+
+database.create_tables()
+
 
 parser = argparse.ArgumentParser(description="Play some blackjack.")
 parser.add_argument("--textui", action="store_true")
@@ -45,4 +58,6 @@ if __name__ == "__main__":
             elif input_ == "u":
                 game = game.new_game()
             print_menu()
+    else:
+        app.run(debug=True)
 
