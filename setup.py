@@ -8,7 +8,7 @@ setup(
     license='BSD',
     author='Mikko Kujala',
     author_email='m.kujala@live.com',
-    description='Blackjack game and HTTP API for it.'
+    description='Blackjack game and HTTP API for it.',
     install_requires=[
         'python-dotenv>=0.13',
         'Flask>=1.1',
