@@ -1,5 +1,5 @@
 dotenv-python
 flask
 flask-RESTful
-
 flask-jwt-extended
+psycopg2-binary
