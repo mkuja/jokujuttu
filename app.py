@@ -1,11 +1,7 @@
-# TODO: recognize when player goes over 21 and don't allow drawing more cards, and conclude the game as player's loss.
-# TODO: Don't allow drawing more than five cards.
-# TODO: Five cards and a hand value < 22 is a blackjack. recognize this without having to stay.
-# TODO: Don't allow user to draw cards for the computer using draw() after staying.
-# TODO: Don't draw() for computer if player has a blackjack.
+# TODO: -- Don't allow user to draw cards for the computer using draw() after staying.
+# TODO: Make a sane reply from API in the case above.
 
 # TODO: Prevent logging in with empty email.
-# TODO: evaluate_winner should be run only when game is truly over.
 
 import database
 

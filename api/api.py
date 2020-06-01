@@ -11,6 +11,7 @@ from game.game import Game
 from game.hand import Hand
 from models.user import User
 from exceptions import *
+from constants import *
 
 app = Flask(__name__)
 api = Api(app)
@@ -46,8 +47,10 @@ class Move(Resource):
         args = parser.parse_args()
         username, user, game = _get_username_user_and_game()
         if args.get("move") == "hit":
-            game.hit()
-            return {"msg": "Move ok."}, 200
+            if game.game_table.turn_indicator == PLAYER_TURN_INDICATOR:
+                game.hit()
+                return {"msg": "Move ok."}, 200
+            return {"msg": "It is not player's turn."}, 400
         elif args.get("move") == "stay":
             game.stay()
             return {"msg": "Move ok."}, 200

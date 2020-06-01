@@ -1,0 +1,3 @@
+[submodule "ui/webui"]
+	path = ui/webui
+	url = https://github.com/Bminor87/blackjack.git
