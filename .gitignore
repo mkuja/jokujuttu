@@ -3,4 +3,6 @@ __pycache__
 venv
 .idea
 *__pycache__
-
+build*
+blackjack.egg-info*
+dist*
