@@ -56,7 +56,7 @@ class Move(Resource):
             return {"msg": "Move ok."}, 200
 
         if args.get("new_game") == "true":
-            game = Game(user)
+            game = Game(user, new_game=True)
             return {"msg": "The deed has been done, good sir."}
 
         return {"msg":
