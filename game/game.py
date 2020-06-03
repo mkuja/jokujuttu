@@ -70,7 +70,8 @@ class Game:
     def evaluate_winner(self):
         """Return "player" or "computer" or "tie"."""
         if self.game_table.turn_indicator != GAME_OVER_TURN_INDICATOR:
-            raise exceptions.Fly("Game is not over and called on evaluate_winner().")
+            whose_turn = "player's" if self.game_table.turn_indicator == PLAYER_TURN_INDICATOR else "computer's"
+            return f"Game is in progress. It is {whose_turn} turn."
         if self.game_table.player.is_blackjack() and self.game_table.computer.is_blackjack():
             return "tie"
         elif self.game_table.player.is_blackjack():

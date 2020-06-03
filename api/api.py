@@ -67,8 +67,9 @@ class Status(Resource):
 
     @jwt_required
     def post(self):
-        def _format_ret_val():
-            list_of_cards = player_hand.get_cards()
+        def _format_ret_val(hand: Hand):
+            """Formats a Hand into a dictionary."""
+            list_of_cards = hand.get_cards()
             ret = {cardno: {"suit": card.suit, "value": card.value}
                    for cardno, card in zip(("card1", "card2", "card3", "card4", "card5"), list_of_cards)
                    if card.suit and card.value}
@@ -78,22 +79,27 @@ class Status(Resource):
         parser.add_argument("get_winner", type=str, help="If true, evaluate hands and return winner.")
         args = parser.parse_args()
         username, user, game = _get_username_user_and_game()
-        ret = {}
-        if args.get("get_hand") == "player":
-            player_hand = game.get_player_hand()
-            ret = _format_ret_val()
-            ret_200 = dict({"hand": ret})
-        elif args.get("get_hand") == "computer":
-            player_hand = game.get_computer_hand()
-            ret = _format_ret_val()
-            ret_200 = dict({"hand": ret})
-        else:
-            return {"msg": "Value of 'get_hand' has to be either 'computer' or 'player'."}, 400
-
-        if args.get("get_winner") == "true":
-            winner = game.evaluate_winner()
-            ret_200 = dict(ret_200, **{"winner": winner})
-        return ret_200, 200
+        return_value = {}
+        for arg, val in args.items():
+            if arg == "get_hand":
+                if val == "player":
+                    player_hand = game.get_player_hand()
+                    return_value = dict(**return_value,
+                                         player_hand=_format_ret_val(player_hand))
+                elif val == "computer":
+                    computer_hand = game.get_computer_hand()
+                    return_value = dict(**return_value,
+                                         computer_hand=_format_ret_val(computer_hand))
+                elif val == "both":
+                    player_hand = game.get_player_hand()
+                    computer_hand = game.get_computer_hand()
+                    return_value = dict(**return_value,
+                                         player_hand=_format_ret_val(player_hand),
+                                         computer_hand=_format_ret_val(computer_hand))
+            if arg == "get_winner":  # TODO: Miks tää liitetään aina?
+                winner = game.evaluate_winner()
+                return_value = dict(**return_value, winner=winner)
+        return return_value
 
 
 class HelloWorld(Resource):

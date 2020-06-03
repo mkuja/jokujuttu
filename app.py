@@ -1,7 +1,8 @@
-# TODO: -- Don't allow user to draw cards for the computer using draw() after staying.
+# TODO: Don't allow user to draw cards for the computer using draw() after staying.
 # TODO: Make a sane reply from API in the case above.
 
 # TODO: Prevent logging in with empty email.
+
 
 import database
 
